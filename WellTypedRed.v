@@ -2,6 +2,9 @@
 Require Import Equations.Type.All. *)
 From Coq Require Import Prelude List.
 From Equations Require Import Equations.
+From Equations.Prop Require Import Logic.
+
+Notation "e # t" := (transport _ e t) (at level 70).
 
 Close Scope nat_scope.
 
@@ -23,13 +26,6 @@ Notation "Γ ,,, Δ" := (@app Ty Δ Γ) (at level 60).
 Inductive Var : Ctx -> Ty -> Set :=
   | here {Γ A} : Var (Γ ,, A) A
   | there {Γ A B} : Var Γ A -> Var (Γ,,B) A.
-
-
-Equations lift_var {Γ} Δ {A B} (v : Var (Γ,,,Δ) A) : Var (Γ,,B,,,Δ) A :=
-  lift_var ⋅ here := (there here) ;
-  lift_var ⋅ (there v) := (there (there v)) ;
-  lift_var (_,,_) (there v) := there (lift_var _ v) ;
-  lift_var (_,,_) here := here.
 
 
 Equations lift_var {Γ Δ A B} (v : Var (Γ,,,Δ) A) : Var (Γ,,B,,,Δ) A :=
@@ -253,7 +249,13 @@ Lemma beta_over {Γ A B} {t : Tm (Γ,,A) B} {u : Tm Γ A} {t' : RTm t} {u' : RTm
   class_of (beta t u # (rapp (rlam t') u')) = class_of (rsub_tm u' t') :> QTm _.
 Proof.
   apply related_classes_eq.
-
+  econstructor.
+  split.
+  2: constructor.
+  econstructor.
+  2: constructor.
+  constructor.
+Qed.
 
 Definition from_Tm {Γ A} (t : Tm Γ A) : QTm t.
 Proof.
